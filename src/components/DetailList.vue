@@ -21,7 +21,7 @@
             </div>
         </div>
         <TransitionGroup name="detail-list">
-            <DetailItem @select='setSelectedDetailId' @addAmount='addAmount' @removeAmount='removeAmount'
+            <DetailItem @select='setSelectedDetailId' @addAmount='addAmount' @removeAmount='removeAmount' @edit="edit"
                 v-for='detail in details' :detail='detail' :selectedDetailId='selectedDetailId' :key="detail.id" />
         </TransitionGroup>
     </div>
@@ -57,6 +57,9 @@ export default {
         },
         removeAmount(id: number) {
             this.$emit('removeAmount', id)
+        },
+        edit(id: number, name: string, price: number, amount: number, child: boolean) {
+            this.$emit('edit', id, name, price, amount, child)
         }
     }
 }

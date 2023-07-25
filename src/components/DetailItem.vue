@@ -19,6 +19,7 @@
             <BButtonGroup>
                 <BButton variant='success' @click.stop="addAmount">Add</BButton>
                 <BButton variant='danger' @click.stop="removeAmount">Remove</BButton>
+                <BButton variant='dark' @click.stop="edit">Edit</BButton>
             </BButtonGroup>
         </div>
     </div>
@@ -52,6 +53,13 @@ export default {
         },
         removeAmount() {
             this.$emit('removeAmount', this.detail.id)
+        },
+        edit() {
+            let child = false
+            if (this.detail.subdetails === null) {
+                child = true
+            }
+            this.$emit('edit', this.detail.id, this.detail.name, this.detail.price, this.detail.amount, child)
         }
     }
 }

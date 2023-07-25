@@ -3,7 +3,7 @@
     <h4 class='help'>*Click on a row to (un)select it</h4>
     <DetailForm @addDetail='addDetail' />
     <DetailList :details='flatDetails' :selectedDetailId='selectedDetailId' @select='setSelectedDetailId'
-      @addAmount='addAmount' @removeAmount='removeAmount' />
+      @addAmount='addAmount' @removeAmount='removeAmount' @edit="edit" />
     <div class='download-button download-button--spacing'>
       <BButton variant='success'>
         <download-excel :data='flatDetails' :fields='{
@@ -20,8 +20,8 @@
           Download
         </download-excel>
       </BButton>
-
     </div>
+    <EditModal :child="child" :show-modal="showModal" :p-id="pid" :p-name="pname" :p-price="pprice" :p-amount="pamount" @close="showModal = false" @update="update" />
   </div>
 </template>
 
@@ -29,19 +29,27 @@
 import Detail from '@/types/Detail'
 import DetailList from '@/components/DetailList.vue'
 import DetailForm from '@/components/DetailForm.vue'
+import EditModal from '@/components/EditModal.vue'
 
 interface Data {
   details: Array<Detail>,
   name: string,
   price: number,
   amount: number,
-  selectedDetailId: number
+  selectedDetailId: number,
+  showModal: boolean,
+  pid: number,
+  pname: string,
+  pprice: number,
+  pamount: number,
+  child: boolean
 }
 
 export default {
   components: {
     DetailList,
-    DetailForm
+    DetailForm,
+    EditModal
   },
   data() {
     const data: Data = {
@@ -102,7 +110,13 @@ export default {
       name: '',
       price: 0,
       amount: 0,
-      selectedDetailId: 0
+      selectedDetailId: 0,
+      showModal: false,
+      pid: 0,
+      pname: '',
+      pprice: 0,
+      pamount: 0,
+      child: false
     }
     return data
   },
@@ -163,6 +177,31 @@ export default {
         this.selectedDetailId = id
       }
     },
+    edit(id: number, name: string, price: number, amount: number, child: boolean) {
+      this.showModal = true
+      this.pid = id
+      this.pname = name
+      this.pprice = price
+      this.pamount = amount
+      this.child = child
+    },
+    update(detail: Detail) {
+      const updateDetail = (arr: Array<Detail>) => {
+        for (let i = 0; i < arr.length; i++) {
+          if (arr[i].id === detail.id) {
+            arr[i].name = detail.name
+            arr[i].amount = detail.amount
+            arr[i].price = detail.price
+            return
+          } else if (arr[i].subdetails !== null) {
+            updateDetail(arr[i].subdetails!)
+          }
+        }
+      }
+      updateDetail(this.details)
+      this.showModal = false
+      this.priceBeenUpdated = true
+    },
     offloadToExcel() {
       console.log('Offloading...')
     }
@@ -183,12 +222,12 @@ export default {
               temp = flattenDetailsArray(arr[i].subdetails!, number + '.' + (i + 1), false)
               arr[i].number = number + '.' + (i + 1)
             }
-            // summing up price to parent detail from child details
-            arr[i].price = 0
-            for (let j = 0; j < temp.length; j++) {
-              // if a child detail is a direct child to the parent detail 
-              if (temp[j].number?.length === (arr[i].number?.length! + 2)) {
-                arr[i].price += temp[j].price
+              // summing up price to parent detail from child details
+              arr[i].price = 0
+              for (let j = 0; j < temp.length; j++) {
+                // if a child detail is a direct child to the parent detail 
+                if (temp[j].number?.length === (arr[i].number?.length! + 2)) {
+                  arr[i].price += temp[j].price
               }
             }
             newArr.push(arr[i])
